@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    private Vector3 posicion;
     public float speed;
     private Rigidbody rb;
     // Start is called before the first frame update
@@ -24,5 +25,18 @@ public class PlayerController : MonoBehaviour
         Vector3 movimiento = new Vector3 (moveHorizontal,0.0f,moveVertical);
 
         rb.AddForce (movimiento*speed);
+    }
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("Recolectable"))
+        {
+            other.gameObject.SetActive(false);
+           
+        } else {
+          
+        }
+        
+            
+        
     }
 }
