@@ -18,12 +18,14 @@ public class PlayerController : MonoBehaviour
 
     public TextMeshProUGUI countText;       
     public TextMeshProUGUI timerText;       
+    public TextMeshProUGUI gameOverText;    // 👉 Texto de "Ganaste" o "Caíste en la trampa"
 
     private int count;
     private float timer;
     private bool gameActive;
 
     public int targetRecolectables;   // se configura en cada escena desde el Inspector
+    private Vector3 offsetTexto = new Vector3(0, 1.5f, 0); // altura del texto sobre la esfera
 
     void Start()
     {
@@ -46,6 +48,9 @@ public class PlayerController : MonoBehaviour
         timer = 0f;
         gameActive = true;
 
+        if (gameOverText != null)
+            gameOverText.text = ""; // empieza vacío
+
         ResetRecolectables();
     }
 
@@ -56,10 +61,20 @@ public class PlayerController : MonoBehaviour
             timer += Time.deltaTime;
             UpdateTimerText();
         }
+
+        // 👉 Mantener el texto siempre encima de la esfera si está activo
+        if (gameOverText != null && !string.IsNullOrEmpty(gameOverText.text))
+        {
+            gameOverText.transform.position = Camera.main.WorldToScreenPoint(
+                transform.position + offsetTexto
+            );
+        }
     }
 
     void FixedUpdate()
     {
+        if (!gameActive) return; 
+
         float moveHorizontal = Input.GetAxis("Horizontal");
         float moveVertical = Input.GetAxis("Vertical");
 
@@ -85,19 +100,57 @@ public class PlayerController : MonoBehaviour
             // ✅ condición: cuando se juntan todos los recolectables
             if (count >= targetRecolectables)
             {
-                gameActive = false;
-
-                Debug.Log("Tiempo final de " 
-                          + SceneManager.GetActiveScene().name 
-                          + ": " + FormatTime(timer));
-
-                // si es el nivel final no cambiamos de escena
-                if (SceneManager.GetActiveScene().buildIndex < SceneManager.sceneCountInBuildSettings - 1)
-                {
-                    StartCoroutine(LoadNextScene());
-                }
+                Ganaste();
             }
         }
+
+        // ✅ TRAMPA
+        if (other.gameObject.CompareTag("Trampa"))
+        {
+            CaerEnTrampa(other.gameObject);
+        }
+    }
+
+    void Ganaste()
+    {
+        gameActive = false;
+
+        // Mensaje sobre la esfera
+        if (gameOverText != null)
+            gameOverText.text = "¡Ganaste!";
+
+        Debug.Log("Ganaste en " + SceneManager.GetActiveScene().name + " con tiempo: " + FormatTime(timer));
+
+        // si no es el último nivel, carga la siguiente escena
+        if (SceneManager.GetActiveScene().buildIndex < SceneManager.sceneCountInBuildSettings - 1)
+        {
+            StartCoroutine(LoadNextScene());
+        }
+    }
+
+    void CaerEnTrampa(GameObject trampa)
+    {
+        gameActive = false;
+
+        // ✅ Cambiar color de la trampa a negro inmediatamente
+        Renderer rend = trampa.GetComponent<Renderer>();
+        if (rend != null)
+        {
+            rend.material.color = Color.black;
+        }
+
+        // Detener la esfera
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        // Mensaje sobre la esfera
+        if (gameOverText != null)
+            gameOverText.text = "¡Caíste en la trampa!";
+
+        Debug.Log("Caíste en la trampa en " + SceneManager.GetActiveScene().name);
+
+        // Espera antes de reiniciar
+        StartCoroutine(RestartScene());
     }
 
     void OnCollisionEnter(Collision collision)
@@ -125,7 +178,6 @@ public class PlayerController : MonoBehaviour
 
     void SetCountText() 
     {
-        // 👌 ya no muestra "x / total", solo el número actual
         countText.text = "Recolectables: " + count.ToString();
     }
 
@@ -158,8 +210,15 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator LoadNextScene()
     {
-        yield return new WaitForSeconds(2f); // delay opcional
+        yield return new WaitForSeconds(2f); 
         int currentIndex = SceneManager.GetActiveScene().buildIndex;
-        SceneManager.LoadScene(currentIndex + 1); // carga la siguiente en la lista Build
+        SceneManager.LoadScene(currentIndex + 1); 
+    }
+
+    IEnumerator RestartScene()
+    {
+        yield return new WaitForSeconds(2f); 
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex); 
     }
 }
+
