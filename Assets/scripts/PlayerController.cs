@@ -18,14 +18,14 @@ public class PlayerController : MonoBehaviour
 
     public TextMeshProUGUI countText;       
     public TextMeshProUGUI timerText;       
-    public TextMeshProUGUI gameOverText;    // 👉 Texto de "Ganaste" o "Caíste en la trampa"
+    public TextMeshProUGUI gameOverText;    
 
     private int count;
     private float timer;
     private bool gameActive;
 
-    public int targetRecolectables;   // se configura en cada escena desde el Inspector
-    private Vector3 offsetTexto = new Vector3(0, 1.5f, 0); // altura del texto sobre la esfera
+    public int targetRecolectables;   
+    private Vector3 offsetTexto = new Vector3(0, 1.5f, 0); 
 
     void Start()
     {
@@ -49,7 +49,7 @@ public class PlayerController : MonoBehaviour
         gameActive = true;
 
         if (gameOverText != null)
-            gameOverText.text = ""; // empieza vacío
+            gameOverText.text = "";
 
         ResetRecolectables();
     }
@@ -62,7 +62,7 @@ public class PlayerController : MonoBehaviour
             UpdateTimerText();
         }
 
-        // 👉 Mantener el texto siempre encima de la esfera si está activo
+        
         if (gameOverText != null && !string.IsNullOrEmpty(gameOverText.text))
         {
             gameOverText.transform.position = Camera.main.WorldToScreenPoint(
@@ -97,14 +97,14 @@ public class PlayerController : MonoBehaviour
             if (recolectarAudio != null)
                 recolectarAudio.Play();
 
-            // ✅ condición: cuando se juntan todos los recolectables
+    
             if (count >= targetRecolectables)
             {
                 Ganaste();
             }
         }
 
-        // ✅ TRAMPA
+        
         if (other.gameObject.CompareTag("Trampa"))
         {
             CaerEnTrampa(other.gameObject);
@@ -115,13 +115,13 @@ public class PlayerController : MonoBehaviour
     {
         gameActive = false;
 
-        // Mensaje sobre la esfera
+        
         if (gameOverText != null)
             gameOverText.text = "¡Ganaste!";
 
         Debug.Log("Ganaste en " + SceneManager.GetActiveScene().name + " con tiempo: " + FormatTime(timer));
 
-        // si no es el último nivel, carga la siguiente escena
+        
         if (SceneManager.GetActiveScene().buildIndex < SceneManager.sceneCountInBuildSettings - 1)
         {
             StartCoroutine(LoadNextScene());
@@ -132,24 +132,24 @@ public class PlayerController : MonoBehaviour
     {
         gameActive = false;
 
-        // ✅ Cambiar color de la trampa a negro inmediatamente
+        
         Renderer rend = trampa.GetComponent<Renderer>();
         if (rend != null)
         {
             rend.material.color = Color.black;
         }
 
-        // Detener la esfera
+        
         rb.velocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // Mensaje sobre la esfera
+        
         if (gameOverText != null)
             gameOverText.text = "¡Caíste en la trampa!";
 
         Debug.Log("Caíste en la trampa en " + SceneManager.GetActiveScene().name);
 
-        // Espera antes de reiniciar
+        
         StartCoroutine(RestartScene());
     }
 
